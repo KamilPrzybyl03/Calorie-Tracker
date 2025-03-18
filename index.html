@@ -9,59 +9,102 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>Calorie Estimator</h1>
-    
-    <div id="loginForm">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="button" onclick="login()">Login</button>
-    </div>
 
-    <div id="registerForm">
-        <h2>Register</h2>
-        <input type="text" id="registerUsername" placeholder="Username" required>
-        <input type="password" id="registerPassword" placeholder="Password" required>
-        <button type="button" onclick="register()">Register</button>
-    </div>
 
-    <input type="file" id="imageInput" accept="image/*" capture="camera">
-    <button onclick="analyzeImage()">Analyze Food Image</button>
-    <p id="result"></p>
-    <a href="help.html" class="button">help</a>
-    <div class="container">
-        <h1>Calorie Tracker</h1>
-    
+    <h1>Calorie Tracker</h1>
 
-        <h2>Todays Net Calories: <span id="netCalories">0</span></h2>
+    <h2 class="net-calories"><span id="calorieText">Today's Calories: </span><span id="netCalories">0</span></h2>
+
+
     
-        <div class="section">
-            <h2>Food Intake</h2>
-            <div class="input-group">
-                <label for="foodName">Food Name:</label>
-                <input type="text" id="foodName">
-            </div>
-            <div class="input-group">
-                <label for="foodCalories">Calories:</label>
-                <input type="number" id="foodCalories">
-            </div>
-            <button type="button" onclick="addFood()">Add Food</button>
-            <ul id="foodList"></ul>
+    <!-- Login and Register Buttons -->
+    <div class="auth-container">
+        <div id="auth-buttons">
+            <button onclick="togglePopup('loginPopup')">Login</button>
+            <button onclick="togglePopup('registerPopup')">Register</button>
         </div>
     
-        <div class="section">
-            <h2>Workouts</h2>
-            <div class="input-group">
-                <label for="workoutName">Workout Name:</label>
-                <input type="text" id="workoutName">
-            </div>
-            <div class="input-group">
-                <label for="workoutCalories">Calories Burned:</label>
-                <input type="number" id="workoutCalories">
-            </div>
-            <button type="button" onclick="addWorkout()">Add Workout</button>
-            <ul id="workoutList"></ul>
+        <div id="user-info" class="hidden">
+            <button id="usernameButton" onclick="togglePopup('userPopup')"></button>
         </div>
-    </div>    
-</body>
-</html>
+    </div>
+
+    <!-- Login -->
+    <div id="loginPopup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="togglePopup('loginPopup')">&times;</span>
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="button" onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <!-- Register -->
+    <div id="registerPopup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="togglePopup('registerPopup')">&times;</span>
+            <h2>Register</h2>
+            <input type="text" id="registerUsername" placeholder="Username" required>
+            <input type="password" id="registerPassword" placeholder="Password" required>
+            <button type="button" onclick="register()">Register</button>
+        </div>
+    </div>
+
+    <!-- Logout popup -->
+    <div id="userPopup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="togglePopup('userPopup')">&times;</span>
+            <h2>Account</h2>
+            <button type="button" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+        
+
+        <div class="tracker-container">
+            <!-- Food Intake Section -->
+            <div class="section">
+                <h2>Food Intake</h2>
+    
+                <div class="food-inputs">
+                    <div class="input-group">
+                        <label for="foodName">Food:</label>
+                        <input type="text" id="foodName">
+                    </div>
+                    <div class="input-group">
+                        <label for="foodCalories">Calories:</label>
+                        <input type="number" id="foodCalories">
+                    </div>
+                </div>
+    
+                <div class="image-upload">
+                    <input type="file" id="imageInput" accept="image/*" capture="camera">
+                    <button onclick="analyzeImage()">Preview</button>
+                    <p id="result"></p>
+                </div>
+    
+                <button type="button" onclick="addFood()">Add</button>
+                <ul id="foodList"></ul>
+                <p id="result"></p>
+            </div>
+    
+            <!-- Workout Section -->
+            <div class="section">
+                <h2>Workouts</h2>
+                <div class="input-group">
+                    <label for="workoutName">Workout:</label>
+                    <input type="text" id="workoutName">
+                </div>
+                <div class="input-group">
+                    <label for="workoutCalories">Calories:</label>
+                    <input type="number" id="workoutCalories">
+                </div>
+                <button type="button" onclick="addWorkout()">Add</button>
+                <ul id="workoutList"></ul>
+            </div>
+        </div>
+
+    
+    </body>
+    </html>

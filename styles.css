@@ -1,51 +1,282 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     margin: 0;
     padding: 20px;
-}
-
-h1 {
     text-align: center;
-    color: #333;
 }
 
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* Title */
+h1 {
+    color: #1e90ff;
+    font-size: 28px;
 }
 
-input[type="text"] {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+/* Net Calories */
+.net-calories {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #28a745;
+/* Auth Container */
+.auth-container {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+/* Hide elements */
+.hidden {
+    display: none;
+}
+
+/* Username Button */
+#usernameButton {
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e90ff;
+    cursor: pointer;
+}
+
+#usernameButton:hover {
+    text-decoration: underline;
+}
+
+/* Auth Buttons */
+.auth-buttons {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+.auth-buttons button {
+    background-color: #1e90ff;
     color: white;
     border: none;
-    border-radius: 4px;
+    padding: 8px 15px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+.auth-buttons button:hover {
+    background-color: #4169e1;
+}
+
+/* Popup */
+.popup {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 280px;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.popup-content {
+    position: relative;
+}
+
+.popup h2 {
+    font-size: 18px;
+    color: #1e90ff;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.popup input {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0;
+    border: 1px solid #4682b4;
+    border-radius: 5px;
+}
+
+.popup button {
+    width: 100%;
+    padding: 8px;
+    background-color: #1e90ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.popup button:hover {
+    background-color: #4169e1;
+}
+
+/* Close Button */
+.close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #555;
+}
+
+.close:hover {
+    color: #000;
+}
+
+/* Food & Workout Sections */
+
+h2 {
+    font-size: 12px;
+    color: #000000;
+
+}
+
+.tracker-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5px;
+    max-width: 540px;
+    margin: 20px auto;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex-wrap: nowrap;
+}
+
+.section {
+    flex: 1;
+    width: 40%;
+    padding: 6px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    min-width: 100px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    gap: 2px;
+    width: 80%;
+}
+
+.input-group label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #1e90ff;
+}
+
+input[type="text"], 
+input[type="number"] {
+    width: 50%;
+    padding: 4px;
+    border: 1px solid #4682b4;
+    border-radius: 5px;
+    font-size: 10px;
+}
+
+/* Image Upload Section */
+.image-upload {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 2px;
+}
+
+.image-upload input {
+    width: 80%;
+    flex: 1;
+    padding: 4px;
+    font-size: 10px;
+    border: 1px solid #4682b4;
+    border-radius: 5px;
+}
+
+.image-upload button {
+    width: 50%;
+    padding: 4px;
+    font-size: 10px;
+    background-color: #1e90ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 0;
+}
+
+.image-upload button:hover {
+    background-color: #4169e1;
+}
+
+/* Buttons - Smaller & Neat */
+button {
+    width: auto;
+    padding: 4px;
+    font-size: 10px;
+    background-color: #1e90ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 2px;
+    margin-left: auto;
+    margin-right: auto; 
+    display: block; 
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: #4169e1;
+}
+
+/* Food and Workout List Styles */
+#foodList, #workoutList {
+    padding-left: 0;
+    list-style-type: none;
+    margin-top: 8px;
+}
+
+#foodList li, #workoutList li {
+    font-size: 12px;
+    padding: 2px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#foodList li:last-child, #workoutList li:last-child {
+    border-bottom: none;
 }
 
 #result {
-    margin-top: 20px;
-    font-size: 18px;
-    color: #333;
-    text-align: center;
+    font-size: 10px; 
+    color: #000000; 
+}
+
+
+/* Responsive */
+@media (max-width: 600px) {
+    .tracker-container {
+        flex-wrap: nowrap;
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .section {
+        min-width: 48%;
+}
+
+    .image-upload {
+        flex-direction: column;
+    }
 }

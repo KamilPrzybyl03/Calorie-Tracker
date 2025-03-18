@@ -5,6 +5,16 @@ const NUTRITIONIX_APP_ID = '54df6a3b';
 const NUTRITIONIX_API_KEY = 'b96e7096a95d174419a93f947c85f1ef';
 const GOOGLE_CLOUD_VISION_API_KEY = 'AIzaSyBRGdHX23RW7cHc3Fx0QGVrx15az8Nyvto';
 
+function togglePopup(popupId) {
+    const popup = document.getElementById(popupId);
+    popup.style.display = popup.style.display === "block" ? "none" : "block";
+}
+
+
+function togglePopup(popupId) {
+    const popup = document.getElementById(popupId);
+    popup.style.display = popup.style.display === "block" ? "none" : "block";
+}
 
 function login() {
     const username = document.getElementById('username').value;
@@ -17,21 +27,45 @@ function login() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Login response:', data);
         if (data.success) {
             alert('Login successful!');
-            localStorage.setItem('userId', data.userId); // Store user ID
-            window.location.reload(); // Reload page after login
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('username', username);
+            updateAuthUI();
+            togglePopup('loginPopup');
         } else {
             alert('Login failed: ' + data.message);
         }
     })
-    .catch(error => {
-        console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
-    });
+    .catch(error => console.error('Error during login:', error));
 }
 
+function logout() {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    updateAuthUI();
+    togglePopup('userPopup');
+}
+
+function updateAuthUI() {
+    const authButtons = document.getElementById('auth-buttons');
+    const userInfo = document.getElementById('user-info');
+    const usernameButton = document.getElementById('usernameButton');
+
+    const username = localStorage.getItem('username');
+
+    if (username) {
+        authButtons.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        usernameButton.innerText = username;
+    } else {
+        authButtons.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+    }
+}
+
+// Run updateAuthUI when page loads
+document.addEventListener("DOMContentLoaded", updateAuthUI);
 
 function addFood() {
     const userId = localStorage.getItem('userId');
@@ -264,7 +298,24 @@ function fetchNetCalories() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('netCalories').innerText = data.netCalories;
+                let netCalories = data.netCalories;
+                const calorieText = document.getElementById('calorieText');
+                const calorieDisplay = document.getElementById('netCalories');
+
+                const absoluteCalories = Math.abs(netCalories);
+
+                calorieDisplay.innerText = absoluteCalories;
+
+                if (netCalories > 0) {
+                    calorieText.innerText = "Calories Gained Today: ";
+                    calorieDisplay.style.color = "red";
+                } else if (netCalories < 0) {
+                    calorieText.innerText = "Calories Lost Today: ";
+                    calorieDisplay.style.color = "green";
+                } else {
+                    calorieText.innerText = "No Calories Gained or Lost Today: ";
+                    calorieDisplay.style.color = "black";
+                }
             } else {
                 console.error('Error fetching net calories:', data.message);
             }
@@ -275,9 +326,16 @@ function fetchNetCalories() {
 // Run fetchNetCalories when page loads
 document.addEventListener("DOMContentLoaded", fetchNetCalories);
 
+// Run fetchNetCalories when page loads
+document.addEventListener("DOMContentLoaded", fetchNetCalories);
+
 // Event listener for form submission
 document.getElementById('calorieForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const netCalories = totalCaloriesGained - totalCaloriesBurned;
     document.getElementById('result').innerText = `Net Calories: ${netCalories}`;
 });
+
+
+// Load calorie loss data when the page loads
+document.addEventListener("DOMContentLoaded", () => fetchCalorieHistory());
