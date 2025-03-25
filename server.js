@@ -135,6 +135,60 @@ app.get('/api/getNetCalories', (req, res) => {
 });
 
 
+// Get today's food for user
+app.get('/api/getTodaysFood', (req, res) => {
+    const { userId } = req.query;
+    const query = `
+        SELECT calories_gained, log_date 
+        FROM user_calories 
+        WHERE user_id = ? AND log_date = CURDATE() AND calories_gained IS NOT NULL
+    `;
+    db.query(query, [userId], (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: 'DB error' });
+        res.json({ success: true, data: results });
+    });
+});
+
+// Get today's workouts for user
+app.get('/api/getTodaysWorkouts', (req, res) => {
+    const { userId } = req.query;
+    const query = `
+        SELECT calories_lost, log_date 
+        FROM user_calories 
+        WHERE user_id = ? AND log_date = CURDATE() AND calories_lost IS NOT NULL
+    `;
+    db.query(query, [userId], (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: 'DB error' });
+        res.json({ success: true, data: results });
+    });
+});
+
+
+// Add a recipe
+app.post('/api/addRecipe', (req, res) => {
+    const { userId, recipeName, calories } = req.body;
+    if (!userId || !recipeName || !calories) {
+        return res.status(400).json({ success: false, message: 'Invalid input' });
+    }
+
+    const query = 'INSERT INTO user_recipes (user_id, recipe_name, calories_per_person) VALUES (?, ?, ?)';
+    db.query(query, [userId, recipeName, calories], (err) => {
+        if (err) return res.status(500).json({ success: false, message: 'DB error' });
+        res.json({ success: true });
+    });
+});
+
+// Get all recipes for a user
+app.get('/api/getRecipes', (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ success: false, message: 'User ID required' });
+
+    db.query('SELECT * FROM user_recipes WHERE user_id = ?', [userId], (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: 'DB error' });
+        res.json({ success: true, recipes: results });
+    });
+});
+
 
 // Start the server
 app.listen(PORT, () => {

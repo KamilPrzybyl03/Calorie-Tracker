@@ -104,7 +104,22 @@
                 <ul id="workoutList"></ul>
             </div>
         </div>
+        <div class="section" id="cookbookSection">
+            <h2>My Cookbook</h2>
+            <div class="input-group">
+                <label for="recipeName">Recipe:</label>
+                <input type="text" id="recipeName">
+            </div>
+            <div class="input-group">
+                <label for="recipeCalories">Calories (1 person):</label>
+                <input type="number" id="recipeCalories">
+            </div>
+            <button onclick="addRecipe()">Save Recipe</button>
+        
+            <div id="recipeList" class="recipe-list"></div>
+        </div>
+        
 
-    
+
     </body>
     </html>

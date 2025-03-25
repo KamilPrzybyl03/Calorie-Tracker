@@ -58,11 +58,21 @@ function updateAuthUI() {
         authButtons.classList.add('hidden');
         userInfo.classList.remove('hidden');
         usernameButton.innerText = username;
+        loadRecipes();
+        loadTodaysFood();  
+        loadTodaysWorkouts();
+        fetchNetCalories();
     } else {
         authButtons.classList.remove('hidden');
         userInfo.classList.add('hidden');
+        document.getElementById('recipeList').innerHTML = '';
+        document.getElementById('foodList').innerHTML = '';
+        document.getElementById('workoutList').innerHTML = '';
+        document.getElementById('netCalories').innerText = '0';
+        document.getElementById('calorieText').innerText = "Today's Calories: ";
     }
 }
+
 
 // Run updateAuthUI when page loads
 document.addEventListener("DOMContentLoaded", updateAuthUI);
@@ -323,11 +333,146 @@ function fetchNetCalories() {
         .catch(error => console.error('Error:', error));
 }
 
-// Run fetchNetCalories when page loads
-document.addEventListener("DOMContentLoaded", fetchNetCalories);
+function loadTodaysFood() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-// Run fetchNetCalories when page loads
-document.addEventListener("DOMContentLoaded", fetchNetCalories);
+    fetch(`http://localhost:3000/api/getTodaysFood?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+            const foodList = document.getElementById('foodList');
+            foodList.innerHTML = '';
+
+            const validItems = data.data.filter(item => item.calories_gained > 0);
+
+            if (validItems.length === 0) {
+                foodList.style.display = "none"; // hide list if empty
+                return;
+            }
+
+            foodList.style.display = "block";
+            validItems.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `Food: ${item.calories_gained} calories`;
+                foodList.appendChild(li);
+            });
+        });
+}
+
+
+function loadTodaysWorkouts() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    fetch(`http://localhost:3000/api/getTodaysWorkouts?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+            const workoutList = document.getElementById('workoutList');
+            workoutList.innerHTML = '';
+
+            const validItems = data.data.filter(item => item.calories_lost > 0);
+
+            if (validItems.length === 0) {
+                workoutList.style.display = "none";
+                return;
+            }
+
+            workoutList.style.display = "block";
+            validItems.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `Workout: ${item.calories_lost} calories burned`;
+                workoutList.appendChild(li);
+            });
+        });
+}
+
+
+
+function addRecipe() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+        alert('Please log in to save recipes.');
+        return;
+    }
+
+    const recipeName = document.getElementById('recipeName').value.trim();
+    const recipeCalories = parseInt(document.getElementById('recipeCalories').value, 10);
+
+    if (!recipeName || isNaN(recipeCalories) || recipeCalories <= 0) {
+        alert('Please enter a valid name and calorie value.');
+        return;
+    }
+
+    fetch('http://localhost:3000/api/addRecipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, recipeName, calories: recipeCalories })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Recipe saved!');
+            document.getElementById('recipeName').value = '';
+            document.getElementById('recipeCalories').value = '';
+            loadRecipes();
+        } else {
+            alert('Failed to save recipe.');
+        }
+    });
+}
+
+function loadRecipes() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    fetch(`http://localhost:3000/api/getRecipes?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+            const recipeList = document.getElementById('recipeList');
+            recipeList.innerHTML = '';
+
+            data.recipes.forEach(recipe => {
+                const container = document.createElement('div');
+                container.classList.add('recipe-item');
+
+                const text = document.createElement('span');
+                text.textContent = `${recipe.recipe_name} (${recipe.calories_per_person} cal)`;
+
+                const btn = document.createElement('button');
+                btn.textContent = 'Add to Today';
+                btn.onclick = () => addRecipeToToday(recipe.recipe_name, recipe.calories_per_person);
+
+                container.appendChild(text);
+                container.appendChild(btn);
+                recipeList.appendChild(container);
+            });
+        });
+}
+
+
+function addRecipeToToday(recipeName, calories) {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+        alert('Please log in.');
+        return;
+    }
+
+    fetch('http://localhost:3000/api/addFood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, foodName: recipeName, foodCalories: calories })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Recipe added to today\'s calories!');
+            fetchNetCalories();
+        } else {
+            alert('Error adding to daily log.');
+        }
+    });
+}
+
 
 // Event listener for form submission
 document.getElementById('calorieForm').addEventListener('submit', function(e) {
@@ -336,6 +481,11 @@ document.getElementById('calorieForm').addEventListener('submit', function(e) {
     document.getElementById('result').innerText = `Net Calories: ${netCalories}`;
 });
 
-
-// Load calorie loss data when the page loads
-document.addEventListener("DOMContentLoaded", () => fetchCalorieHistory());
+document.addEventListener("DOMContentLoaded", () => {
+    updateAuthUI();
+    fetchNetCalories();
+    loadRecipes();
+    fetchCalorieHistory();
+    loadTodaysFood();
+    loadTodaysWorkouts();
+});
