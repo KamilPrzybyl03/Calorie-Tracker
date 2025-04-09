@@ -3,28 +3,47 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use(express.static(__dirname));
 
-const db = mysql.createConnection({
+let db;
+
+function handleDisconnect() {
+  db = mysql.createConnection({
     host: '165.227.235.122',
     user: 'kp807',
     password: 'FTPDLAKAMILA',
     database: 'kp807_calorietracker',
     port: 3306
-});
+  });
 
-db.connect(err => {
+  db.connect(err => {
     if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
+      console.error('MySQL connection failed. Retrying in 2s:', err);
+      setTimeout(handleDisconnect, 2000);
+    } else {
+      console.log('✅ Connected to MySQL');
     }
-    console.log('Connected to MySQL database');
-});
+  });
+
+  db.on('error', err => {
+    console.error('MySQL error', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+      handleDisconnect();
+    } else {
+      throw err;
+    }
+  });
+}
+
+handleDisconnect();
+
 
 // Register
 app.post('/api/register', async (req, res) => {
@@ -189,6 +208,9 @@ app.get('/api/getRecipes', (req, res) => {
     });
 });
 
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Start the server
 app.listen(PORT, () => {

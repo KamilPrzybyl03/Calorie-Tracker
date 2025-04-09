@@ -4,6 +4,8 @@ let totalCaloriesBurned = 0;
 const NUTRITIONIX_APP_ID = '54df6a3b';
 const NUTRITIONIX_API_KEY = 'b96e7096a95d174419a93f947c85f1ef';
 const GOOGLE_CLOUD_VISION_API_KEY = 'AIzaSyBRGdHX23RW7cHc3Fx0QGVrx15az8Nyvto';
+const API_BASE = '';
+
 
 function togglePopup(popupId) {
     const popup = document.getElementById(popupId);
@@ -20,7 +22,7 @@ function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    fetch('http://localhost:3000/api/login', {
+    fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -92,7 +94,7 @@ function addFood() {
         return;
     }
 
-    fetch('http://localhost:3000/api/addFood', {
+    fetch(`${API_BASE}/api/addFood`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, foodName, foodCalories })
@@ -131,7 +133,7 @@ function addWorkout() {
         return;
     }
 
-    fetch('http://localhost:3000/api/addWorkout', {
+    fetch(`${API_BASE}/api/addWorkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, workoutName, workoutCalories })
@@ -273,7 +275,7 @@ function register() {
     const password = document.getElementById('registerPassword').value;
 
     // Send registration request to the server
-    fetch('http://localhost:3000/api/register', {
+    fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -304,7 +306,7 @@ function fetchNetCalories() {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
 
-    fetch(`http://localhost:3000/api/getNetCalories?userId=${userId}`)
+    fetch(`${API_BASE}/api/getNetCalories?userId=${userId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -337,7 +339,7 @@ function loadTodaysFood() {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
 
-    fetch(`http://localhost:3000/api/getTodaysFood?userId=${userId}`)
+    fetch(`${API_BASE}/api/getTodaysFood?userId=${userId}`)
         .then(res => res.json())
         .then(data => {
             const foodList = document.getElementById('foodList');
@@ -364,7 +366,7 @@ function loadTodaysWorkouts() {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
 
-    fetch(`http://localhost:3000/api/getTodaysWorkouts?userId=${userId}`)
+    fetch(`${API_BASE}/api/getTodaysWorkouts?userId=${userId}`)
         .then(res => res.json())
         .then(data => {
             const workoutList = document.getElementById('workoutList');
@@ -403,7 +405,7 @@ function addRecipe() {
         return;
     }
 
-    fetch('http://localhost:3000/api/addRecipe', {
+    fetch(`${API_BASE}/api/addRecipe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, recipeName, calories: recipeCalories })
@@ -425,7 +427,7 @@ function loadRecipes() {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
 
-    fetch(`http://localhost:3000/api/getRecipes?userId=${userId}`)
+    fetch(`${API_BASE}/api/getRecipes?userId=${userId}`)
         .then(res => res.json())
         .then(data => {
             const recipeList = document.getElementById('recipeList');
@@ -457,7 +459,7 @@ function addRecipeToToday(recipeName, calories) {
         return;
     }
 
-    fetch('http://localhost:3000/api/addFood', {
+    fetch(`${API_BASE}/api/addFood`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, foodName: recipeName, foodCalories: calories })
@@ -474,18 +476,10 @@ function addRecipeToToday(recipeName, calories) {
 }
 
 
-// Event listener for form submission
-document.getElementById('calorieForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const netCalories = totalCaloriesGained - totalCaloriesBurned;
-    document.getElementById('result').innerText = `Net Calories: ${netCalories}`;
-});
-
 document.addEventListener("DOMContentLoaded", () => {
     updateAuthUI();
     fetchNetCalories();
     loadRecipes();
-    fetchCalorieHistory();
     loadTodaysFood();
     loadTodaysWorkouts();
 });
