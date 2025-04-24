@@ -24,6 +24,7 @@ function login() {
 
     fetch(`${API_BASE}/api/login`, {
         method: 'POST',
+    	credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
     })
@@ -32,7 +33,7 @@ function login() {
         if (data.success) {
             alert('Login successful!');
             localStorage.setItem('userId', data.userId);
-            localStorage.setItem('username', username);
+			localStorage.setItem('username', username);
             updateAuthUI();
             togglePopup('loginPopup');
         } else {
@@ -55,25 +56,18 @@ function updateAuthUI() {
     const usernameButton = document.getElementById('usernameButton');
 
     const username = localStorage.getItem('username');
+    const userId = localStorage.getItem('userId');
 
-    if (username) {
+    if (userId) {
         authButtons.classList.add('hidden');
         userInfo.classList.remove('hidden');
-        usernameButton.innerText = username;
-        loadRecipes();
-        loadTodaysFood();  
-        loadTodaysWorkouts();
-        fetchNetCalories();
+        usernameButton.innerText ='Settings';
     } else {
         authButtons.classList.remove('hidden');
-        userInfo.classList.add('hidden');
-        document.getElementById('recipeList').innerHTML = '';
-        document.getElementById('foodList').innerHTML = '';
-        document.getElementById('workoutList').innerHTML = '';
-        document.getElementById('netCalories').innerText = '0';
-        document.getElementById('calorieText').innerText = "Today's Calories: ";
+        userInfo.classList.add('hidden');    
     }
 }
+
 
 
 // Run updateAuthUI when page loads
@@ -109,7 +103,7 @@ function addFood() {
             foodList.appendChild(listItem);
             document.getElementById('foodName').value = '';
             document.getElementById('foodCalories').value = '';
-            fetchNetCalories(); // Update net calories after adding food
+            fetchNetCalories();
         } else {
             alert('Error adding food: ' + data.message);
         }
@@ -186,9 +180,21 @@ async function getCalories(foodName) {
 
         if (response.ok && result.foods && result.foods.length > 0) {
             const foodInfo = result.foods[0];
-            document.getElementById('result').innerText = `Food Type: ${foodInfo.food_name}, Calories: ${foodInfo.nf_calories}`;
-            document.getElementById('foodName').value = foodInfo.food_name;
-            document.getElementById('foodCalories').value = Math.round(foodInfo.nf_calories);
+
+            // Extract extra info
+            const name = foodInfo.food_name;
+            const calories = Math.round(foodInfo.nf_calories);
+            const servingQty = foodInfo.serving_qty;
+            const servingUnit = foodInfo.serving_unit;
+            const grams = Math.round(foodInfo.serving_weight_grams);
+
+            // Show everything
+            document.getElementById('result').innerText =
+                `Food: ${name}\nCalories: ${calories}\nServing: ${servingQty} ${servingUnit} (${grams}g)`;
+
+            // Pre-fill hidden form fields if you use them
+            document.getElementById('foodName').value = name;
+            document.getElementById('foodCalories').value = calories;
         } else {
             document.getElementById('result').innerText = `Error: ${result.message || 'Food not found'}`;
         }
@@ -197,6 +203,7 @@ async function getCalories(foodName) {
         document.getElementById('result').innerText = `Error: ${error.message}`;
     }
 }
+
 
 function analyzeImage() {
     const input = document.getElementById('imageInput');
@@ -238,8 +245,8 @@ function sendToGoogleVision(base64Image) {
             {
                 image: { content: base64Image },
                 features: [
-                    { type: 'LABEL_DETECTION', maxResults: 5 },
-                    { type: 'OBJECT_LOCALIZATION' }  // Added to improve food detection
+                    { type: 'WEB_DETECTION', maxResults: 10 },
+                    { type: 'OBJECT_LOCALIZATION' } // optional but useful
                 ]
             }
         ]
@@ -253,16 +260,26 @@ function sendToGoogleVision(base64Image) {
     .then(data => {
         console.log("Google Vision API Response:", data);
 
-        if (data.responses && data.responses[0]) {
-            const labels = data.responses[0].labelAnnotations;
-            if (labels && labels.length > 0) {
-                const foodName = labels[0].description;
+        const webLabels = data.responses[0]?.webDetection?.webEntities;
+
+        if (webLabels && webLabels.length > 0) {
+            const blacklist = window.blacklist || [];
+
+            const filtered = webLabels
+            .map(label => label.description?.toLowerCase())
+            .filter(label => label && window.blacklist.includes(label) === false && label.length > 2);
+          
+
+            if (filtered.length > 0) {
+                const foodName = filtered[0].trim();
                 document.getElementById('result').innerText = `Detected food: ${foodName}`;
                 getCalories(foodName);
-                return;
+            } else {
+                document.getElementById('result').innerText = 'Could not detect a specific food item. Try a clearer image.';
             }
+        } else {
+            throw new Error("No web labels detected. Try a clearer image.");
         }
-        throw new Error("No labels detected. Try a clearer image.");
     })
     .catch(error => {
         console.error("Google Vision API Error:", error);
@@ -475,11 +492,93 @@ function addRecipeToToday(recipeName, calories) {
     });
 }
 
+function loadWeeklyCaloriesChart() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    fetch(`/api/weeklyCalories?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.data.length > 0) {
+                const labels = data.data.map(entry => entry.date);
+                const gained = data.data.map(entry => entry.gained);
+                const lost = data.data.map(entry => entry.lost);
+
+                const ctx = document.getElementById('weeklyChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Calories Gained',
+                                data: gained,
+                                borderColor: 'red',
+                                fill: false,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Calories Burned',
+                                data: lost,
+                                borderColor: 'green',
+                                fill: false,
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+}
+
+
+function acceptCookies() {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookieConsent').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('cookieConsent')) {
+        document.getElementById('cookieConsent').style.display = 'block';
+    }
+});
+
 
 document.addEventListener("DOMContentLoaded", () => {
-    updateAuthUI();
-    fetchNetCalories();
-    loadRecipes();
-    loadTodaysFood();
-    loadTodaysWorkouts();
+    fetch(`${API_BASE}/api/session`, {
+        credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.loggedIn) {
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('username', data.username || '');
+        } else {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+        }
+        updateAuthUI();
+        fetchNetCalories();
+        loadRecipes();
+        loadTodaysFood();
+        loadTodaysWorkouts();
+     	loadWeeklyCaloriesChart();
+    })
+    .catch(err => {
+        console.error('Error checking session:', err);
+        updateAuthUI(); // fallback
+    });
 });

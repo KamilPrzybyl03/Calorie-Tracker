@@ -4,13 +4,35 @@ const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const path = require('path');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  origin: 'https://calorie-tracker.duckdns.org',
+  credentials: true
+}));
 app.use(express.static(__dirname));
+
+//Cookies
+app.use(cookieParser());
+
+app.use(session({
+    secret: 'AMA72N3N5B37S93', 
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        secure: process.env.NODE_ENV === 'production', 
+        httpOnly: true,
+        sameSite: 'lax'
+    }
+}));
+
 
 let db;
 
@@ -28,7 +50,7 @@ function handleDisconnect() {
       console.error('MySQL connection failed. Retrying in 2s:', err);
       setTimeout(handleDisconnect, 2000);
     } else {
-      console.log('✅ Connected to MySQL');
+      console.log('Connected to MySQL');
     }
   });
 
@@ -43,7 +65,6 @@ function handleDisconnect() {
 }
 
 handleDisconnect();
-
 
 // Register
 app.post('/api/register', async (req, res) => {
@@ -73,19 +94,50 @@ app.post('/api/login', (req, res) => {
         if (err) {
             return res.status(500).json({ success: false, message: 'Server error' });
         }
+
         if (results.length > 0) {
             const user = results[0];
             const match = await bcrypt.compare(password, user.password_hash);
+
             if (match) {
-                res.json({ success: true, userId: user.id });
-            } else {
-                res.json({ success: false, message: 'Invalid credentials' });
+                req.session.userId = user.id;
+                req.session.save(err => {
+                    if (err) {
+                        return res.status(500).json({ success: false, message: 'Session save failed' });
+                    }
+                    return res.json({ success: true, userId: user.id });
+                });
+                return;
             }
-        } else {
-            res.json({ success: false, message: 'Invalid credentials' });
         }
+
+        res.json({ success: false, message: 'Invalid credentials' });
     });
 });
+
+
+app.get('/api/session', (req, res) => {
+    if (req.session.userId) {
+        db.query('SELECT username FROM users WHERE id = ?', [req.session.userId], (err, results) => {
+            if (err || results.length === 0) {
+                return res.json({ loggedIn: false });
+            }
+            res.json({ loggedIn: true, userId: req.session.userId, username: results[0].username });
+        });
+    } else {
+        res.json({ loggedIn: false });
+    }
+});
+
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) return res.status(500).json({ success: false, message: 'Logout error' });
+        res.clearCookie('connect.sid');
+        res.json({ success: true });
+    });
+});
+
 
 // Add food
 app.post('/api/addFood', (req, res) => {
@@ -207,6 +259,30 @@ app.get('/api/getRecipes', (req, res) => {
         res.json({ success: true, recipes: results });
     });
 });
+
+app.get('/api/weeklyCalories', (req, res) => {
+    const { userId } = req.query;
+    const query = `
+        SELECT 
+            log_date AS date,
+            SUM(COALESCE(calories_gained, 0)) AS gained,
+            SUM(COALESCE(calories_lost, 0)) AS lost
+        FROM user_calories
+        WHERE user_id = ?
+          AND log_date >= CURDATE() - INTERVAL 6 DAY
+        GROUP BY log_date
+        ORDER BY log_date ASC
+    `;
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('DB error:', err);
+            return res.status(500).json({ success: false, message: 'Server error' });
+        }
+        res.json({ success: true, data: results });
+    });
+});
+
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

@@ -1,338 +1,224 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+/* Reset & Base Styling */
+* {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f5f9ff;
+    color: #333;
+    line-height: 1.6;
+    padding-bottom: 100px;
+    overflow-x: hidden;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 20px;
-    text-align: center;
+    background-color: #007bff;
+    color: #fff;
+    flex-wrap: wrap;
 }
 
-/* Title */
-h1 {
-    color: #1e90ff;
-    font-size: 28px;
+.header h1 {
+    margin: 0;
 }
 
-/* Net Calories */
-.net-calories {
-    font-size: 22px;
-    font-weight: bold;
+button {
+    padding: 6px 12px;
+    margin: 4px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Main Layout */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 20px;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.left-panel, .right-panel {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1 1 48%;
     margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow-x: hidden;
 }
 
-/* Auth Container */
-.auth-container {
-    position: absolute;
-    top: 10px;
-    right: 20px;
+/* Cookbook Section */
+.cookbook {
+    background-color: white;
+    padding: 20px;
+    margin: 0 20px 20px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-/* Hide elements */
+.cookbook .recipe-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f8ff;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    flex-wrap: wrap;
+}
+
+.cookbook .recipe-item span {
+    flex: 1 1 auto;
+    margin-bottom: 6px;
+}
+
+.cookbook .recipe-item button {
+    padding: 4px 10px;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* Input Groups */
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.input-group input, .cookbook input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 140px;
+    flex: 1 1 auto;
+    margin-bottom: 6px;
+}
+
+/* Food/Workout Lists */
+#foodList, #workoutList {
+    list-style: none;
+    margin-top: 10px;
+    padding-left: 0;
+    background-color: #e8f1ff;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Cookie Banner */
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #004080;
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    flex-wrap: wrap;
+}
+
+.cookie-banner button {
+    background-color: #00c6ff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.cookie-banner.hidden {
+    display: none;
+}
+
+/* Popups */
+.popup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 999;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
 .hidden {
     display: none;
 }
 
-/* Username Button */
-#usernameButton {
-    background: none;
-    border: none;
-    font-size: 16px;
-    font-weight: bold;
-    color: #1e90ff;
-    cursor: pointer;
+canvas {
+    width: 100% !important;
+    height: auto !important;
 }
-
-#usernameButton:hover {
-    text-decoration: underline;
-}
-
-/* Auth Buttons */
-.auth-buttons {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-}
-
-.auth-buttons button {
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: 5px;
-}
-
-.auth-buttons button:hover {
-    background-color: #4169e1;
-}
-
-/* Popup */
-.popup {
-    display: none;
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    width: 280px;
-    background: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    padding: 20px;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.popup-content {
-    position: relative;
-}
-
-.popup h2 {
-    font-size: 18px;
-    color: #1e90ff;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.popup input {
-    width: 100%;
-    padding: 8px;
-    margin: 8px 0;
-    border: 1px solid #4682b4;
-    border-radius: 5px;
-}
-
-.popup button {
-    width: 100%;
-    padding: 8px;
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.popup button:hover {
-    background-color: #4169e1;
-}
-
-/* Close Button */
-.close {
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    font-size: 20px;
-    cursor: pointer;
-    color: #555;
-}
-
-.close:hover {
-    color: #000;
-}
-
-/* Food & Workout Sections */
-
-h2 {
-    font-size: 12px;
-    color: #000000;
-
-}
-
-.tracker-container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 20px;
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 10px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    flex-wrap: wrap;
-}
-
-.section {
-    flex: 1;
-    width: 40%;
-    padding: 6px;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    text-align: left;
-    min-width: 100px;
-}
-
-.input-group {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    gap: 2px;
-    width: 80%;
-}
-
-.input-group label {
-    font-size: 12px;
-    font-weight: bold;
-    color: #1e90ff;
-}
-
-input[type="text"], 
-input[type="number"] {
-    width: 50%;
-    padding: 4px;
-    border: 1px solid #4682b4;
-    border-radius: 5px;
-    font-size: 10px;
-}
-
-/* Image Upload Section */
-.image-upload {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    margin-top: 2px;
-}
-
-.image-upload input {
-    width: 80%;
-    flex: 1;
-    padding: 4px;
-    font-size: 10px;
-    border: 1px solid #4682b4;
-    border-radius: 5px;
-}
-
-.image-upload button {
-    width: 50%;
-    padding: 4px;
-    font-size: 10px;
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 0;
-}
-
-.image-upload button:hover {
-    background-color: #4169e1;
-}
-
-/* Buttons - Smaller & Neat */
-button {
-    width: auto;
-    padding: 4px;
-    font-size: 10px;
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 2px;
-    margin-left: auto;
-    margin-right: auto; 
-    display: block; 
-}
-
-button:hover {
-    background-color: #4169e1;
-}
-
-/* Food and Workout List Styles */
-#foodList, #workoutList {
-    padding-left: 0;
-    list-style-type: none;
-    margin-top: 8px;
-}
-
-#foodList li, #workoutList li {
-    font-size: 12px;
-    padding: 2px 0;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-#foodList li:last-child, #workoutList li:last-child {
-    border-bottom: none;
-}
-
-#result {
-    font-size: 10px; 
-    color: #000000; 
-}
-
-/* Recipe book */
-.recipe-list {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-}
-
-.recipe-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f9f9f9;
-    padding: 10px 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 14px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-
-.recipe-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f9f9f9;
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 12px;
-}
-
-.recipe-item button {
-    padding: 4px 8px;
-    font-size: 10px;
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.recipe-item button:hover {
-    background-color: #4169e1;
-}
-
-#cookbookSection {
-    flex: 1 1 100%;
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-
 
 /* Responsive */
-@media (max-width: 600px) {
-    .tracker-container {
-        flex-wrap: nowrap;
-        flex-direction: row;
-        overflow-x: auto;
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        gap: 20px;
     }
 
-    .section {
-        min-width: 48%;
-}
+    .left-panel, .right-panel {
+        flex: 1 1 100%;
+        overflow-x: hidden;
+    }
 
-    .image-upload {
+    .cookbook {
+        margin: 20px;
+    }
+
+    .cookbook .recipe-item {
         flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cookbook .recipe-item button {
+        margin-top: 6px;
+        align-self: flex-start;
+    }
+
+    .cookie-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    #weeklyChart {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    .left-panel input,
+    .left-panel button {
+        width: 100%;
+        max-width: 100%;
     }
 }
