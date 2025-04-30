@@ -1,2 +1,2 @@
-Calorie Tracking Website
-A website for people to track their calorie
+# Calorie Tracking Website
+## A website for people to track their calorie intake
