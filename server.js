@@ -1,3 +1,5 @@
+require('dotenv').config();
+const axios = require('axios');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
@@ -13,21 +15,20 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 app.use(bodyParser.json());
 app.use(cors({
-  origin: 'https://calorie-tracker.duckdns.org',
-  credentials: true
-}));
+    origin: process.env.CORS_ORIGIN,
+    credentials: true
+  }));  
 app.use(express.static(__dirname));
 
-//Cookies
 app.use(cookieParser());
 
 app.use(session({
-    secret: 'AMA72N3N5B37S93', 
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        secure: process.env.NODE_ENV === 'production', 
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax'
     }
@@ -37,13 +38,14 @@ app.use(session({
 let db;
 
 function handleDisconnect() {
-  db = mysql.createConnection({
-    host: '165.227.235.122',
-    user: 'kp807',
-    password: 'FTPDLAKAMILA',
-    database: 'kp807_calorietracker',
-    port: 3306
-  });
+    db = mysql.createConnection({
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      port: process.env.MYSQL_PORT
+    });
+  
 
   db.connect(err => {
     if (err) {
@@ -66,7 +68,6 @@ function handleDisconnect() {
 
 handleDisconnect();
 
-// Register
 app.post('/api/register', async (req, res) => {
     console.log('Received registration request:', req.body); 
     const { username, password } = req.body;
@@ -85,7 +86,6 @@ app.post('/api/register', async (req, res) => {
     });
 });
 
-// Login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const query = 'SELECT * FROM users WHERE username = ?';
@@ -138,8 +138,6 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
-
-// Add food
 app.post('/api/addFood', (req, res) => {
     const { userId, foodName, foodCalories } = req.body;
     if (!userId || !foodName || !foodCalories) {
@@ -156,7 +154,6 @@ app.post('/api/addFood', (req, res) => {
     });
 });
 
-// Add workout
 app.post('/api/addWorkout', (req, res) => {
     const { userId, workoutName, workoutCalories } = req.body;
     if (!userId || !workoutName || !workoutCalories) {
@@ -206,7 +203,6 @@ app.get('/api/getNetCalories', (req, res) => {
 });
 
 
-// Get today's food for user
 app.get('/api/getTodaysFood', (req, res) => {
     const { userId } = req.query;
     const query = `
@@ -220,7 +216,6 @@ app.get('/api/getTodaysFood', (req, res) => {
     });
 });
 
-// Get today's workouts for user
 app.get('/api/getTodaysWorkouts', (req, res) => {
     const { userId } = req.query;
     const query = `
@@ -235,7 +230,6 @@ app.get('/api/getTodaysWorkouts', (req, res) => {
 });
 
 
-// Add a recipe
 app.post('/api/addRecipe', (req, res) => {
     const { userId, recipeName, calories } = req.body;
     if (!userId || !recipeName || !calories) {
@@ -249,7 +243,6 @@ app.post('/api/addRecipe', (req, res) => {
     });
 });
 
-// Get all recipes for a user
 app.get('/api/getRecipes', (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ success: false, message: 'User ID required' });
@@ -283,12 +276,62 @@ app.get('/api/weeklyCalories', (req, res) => {
     });
 });
 
+app.post('/api/nutrition', async (req, res) => {
+    const { foodName } = req.body;
+    if (!foodName) {
+        return res.status(400).json({ error: 'Food name is required' });
+    }
+
+    try {
+        const response = await axios.post(
+            'https://trackapi.nutritionix.com/v2/natural/nutrients',
+            { query: foodName },
+            {
+                headers: {
+                    'x-app-id': process.env.NUTRITIONIX_APP_ID,
+                    'x-app-key': process.env.NUTRITIONIX_API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        res.json(response.data);
+    } catch (error) {
+        console.error('Nutritionix API Error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to fetch nutrition info' });
+    }
+});
+
+app.post('/api/vision', async (req, res) => {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+        return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    const apiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_CLOUD_VISION_API_KEY}`;
+    const body = {
+        requests: [{
+            image: { content: imageBase64 },
+            features: [
+                { type: 'WEB_DETECTION', maxResults: 10 },
+                { type: 'OBJECT_LOCALIZATION' }
+            ]
+        }]
+    };
+
+    try {
+        const response = await axios.post(apiUrl, body);
+        res.json(response.data);
+    } catch (error) {
+        console.error('Google Vision API Error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to analyze image' });
+    }
+});
+
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -1,9 +1,6 @@
 let totalCaloriesGained = 0;
 let totalCaloriesBurned = 0;
 
-const NUTRITIONIX_APP_ID = '54df6a3b';
-const NUTRITIONIX_API_KEY = 'b96e7096a95d174419a93f947c85f1ef';
-const GOOGLE_CLOUD_VISION_API_KEY = 'AIzaSyBRGdHX23RW7cHc3Fx0QGVrx15az8Nyvto';
 const API_BASE = '';
 
 
@@ -70,7 +67,6 @@ function updateAuthUI() {
 
 
 
-// Run updateAuthUI when page loads
 document.addEventListener("DOMContentLoaded", updateAuthUI);
 
 function addFood() {
@@ -142,7 +138,7 @@ function addWorkout() {
             workoutList.appendChild(listItem);
             document.getElementById('workoutName').value = '';
             document.getElementById('workoutCalories').value = '';
-            fetchNetCalories(); // Update net calories after adding workout
+            fetchNetCalories();
         } else {
             alert('Error adding workout: ' + data.message);
         }
@@ -154,53 +150,33 @@ function addWorkout() {
 
 
 async function getCalories(foodName) {
-    if (!foodName) {
-        alert('Please enter a food name or take a picture.');
-        return;
-    }
-
-    const url = "https://trackapi.nutritionix.com/v2/natural/nutrients";
-    const headers = {
-        'x-app-id': NUTRITIONIX_APP_ID,
-        'x-app-key': NUTRITIONIX_API_KEY,
-        'Content-Type': 'application/json'
-    };
-
-    const data = { "query": foodName };
-
     try {
-        const response = await fetch(url, {
+        const res = await fetch('/api/nutrition', {
             method: 'POST',
-            headers: headers,
-            body: JSON.stringify(data)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foodName })
         });
 
-        const result = await response.json();
-        console.log("Nutrition API Response:", result);
+        const result = await res.json();
+        if (result.foods && result.foods.length > 0) {
+            const food = result.foods[0];
+            const name = food.food_name;
+            const calories = Math.round(food.nf_calories);
+            const servingQty = food.serving_qty;
+            const servingUnit = food.serving_unit;
+            const grams = Math.round(food.serving_weight_grams);
 
-        if (response.ok && result.foods && result.foods.length > 0) {
-            const foodInfo = result.foods[0];
-
-            // Extract extra info
-            const name = foodInfo.food_name;
-            const calories = Math.round(foodInfo.nf_calories);
-            const servingQty = foodInfo.serving_qty;
-            const servingUnit = foodInfo.serving_unit;
-            const grams = Math.round(foodInfo.serving_weight_grams);
-
-            // Show everything
             document.getElementById('result').innerText =
                 `Food: ${name}\nCalories: ${calories}\nServing: ${servingQty} ${servingUnit} (${grams}g)`;
 
-            // Pre-fill hidden form fields if you use them
             document.getElementById('foodName').value = name;
             document.getElementById('foodCalories').value = calories;
         } else {
-            document.getElementById('result').innerText = `Error: ${result.message || 'Food not found'}`;
+            document.getElementById('result').innerText = 'Food not found.';
         }
-    } catch (error) {
-        console.error("Nutrition API Error:", error);
-        document.getElementById('result').innerText = `Error: ${error.message}`;
+    } catch (err) {
+        console.error('Nutrition error:', err);
+        document.getElementById('result').innerText = `Error: ${err.message}`;
     }
 }
 
@@ -220,7 +196,7 @@ function analyzeImage() {
             document.getElementById('result').innerText = 'Analyzing image...';
             const reader = new FileReader();
             reader.onload = function(e) {
-                const imgData = e.target.result.split(',')[1]; // Extract Base64 content
+                const imgData = e.target.result.split(',')[1];
                 if (!imgData) {
                     document.getElementById('result').innerText = "Error: Image conversion failed.";
                     return;
@@ -238,60 +214,42 @@ function analyzeImage() {
 }
 
 function sendToGoogleVision(base64Image) {
-    const apiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
-
-    const requestBody = {
-        requests: [
-            {
-                image: { content: base64Image },
-                features: [
-                    { type: 'WEB_DETECTION', maxResults: 10 },
-                    { type: 'OBJECT_LOCALIZATION' } // optional but useful
-                ]
-            }
-        ]
-    };
-
-    fetch(apiUrl, {
+    fetch('/api/vision', {
         method: 'POST',
-        body: JSON.stringify(requestBody)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64Image })
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-        console.log("Google Vision API Response:", data);
-
         const webLabels = data.responses[0]?.webDetection?.webEntities;
 
         if (webLabels && webLabels.length > 0) {
-            const blacklist = window.blacklist || [];
-
             const filtered = webLabels
-            .map(label => label.description?.toLowerCase())
-            .filter(label => label && window.blacklist.includes(label) === false && label.length > 2);
-          
+                .map(label => label.description?.toLowerCase())
+                .filter(label => label && !window.blacklist?.includes(label) && label.length > 2);
 
             if (filtered.length > 0) {
                 const foodName = filtered[0].trim();
                 document.getElementById('result').innerText = `Detected food: ${foodName}`;
                 getCalories(foodName);
             } else {
-                document.getElementById('result').innerText = 'Could not detect a specific food item. Try a clearer image.';
+                document.getElementById('result').innerText = 'No specific food detected.';
             }
         } else {
-            throw new Error("No web labels detected. Try a clearer image.");
+            document.getElementById('result').innerText = 'No web labels detected.';
         }
     })
-    .catch(error => {
-        console.error("Google Vision API Error:", error);
-        document.getElementById('result').innerText = `Error: ${error.message}`;
+    .catch(err => {
+        console.error('Vision error:', err);
+        document.getElementById('result').innerText = `Error: ${err.message}`;
     });
 }
+
 
 function register() {
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
 
-    // Send registration request to the server
     fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: {
@@ -308,7 +266,6 @@ function register() {
     .then(data => {
         if (data.success) {
             alert('Registration successful!');
-            // Optionally, redirect or clear the form
         } else {
             alert('Registration failed: ' + data.message);
         }
@@ -365,7 +322,7 @@ function loadTodaysFood() {
             const validItems = data.data.filter(item => item.calories_gained > 0);
 
             if (validItems.length === 0) {
-                foodList.style.display = "none"; // hide list if empty
+                foodList.style.display = "none";
                 return;
             }
 
@@ -579,6 +536,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch(err => {
         console.error('Error checking session:', err);
-        updateAuthUI(); // fallback
+        updateAuthUI();
     });
 });
